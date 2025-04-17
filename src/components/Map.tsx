@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { toast } from "@/components/ui/use-toast";
 
 type MapProps = {
   pickupLocation?: [number, number];
@@ -14,25 +15,49 @@ const Map = ({ pickupLocation, dropoffLocation, className = '' }: MapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string>('');
+  const [tokenError, setTokenError] = useState<string>('');
 
   useEffect(() => {
     // For demo purposes, we would use an environment variable in production
     // This is just a temporary state for user to input their token
     if (!mapboxToken) return;
     
+    // Validate token format - must start with "pk."
+    if (!mapboxToken.startsWith('pk.')) {
+      setTokenError('Please use a public access token (starts with pk.)');
+      toast({
+        title: "Invalid Mapbox Token",
+        description: "Please use a public access token that starts with 'pk.'",
+        variant: "destructive"
+      });
+      return;
+    } else {
+      setTokenError('');
+    }
+    
     if (mapContainer.current && !map.current) {
-      mapboxgl.accessToken = mapboxToken;
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11', // Uber-like dark style
-        center: [-74.006, 40.7128], // Default to NYC
-        zoom: 12,
-      });
+      try {
+        mapboxgl.accessToken = mapboxToken;
+        
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/dark-v11', // Uber-like dark style
+          center: [-74.006, 40.7128], // Default to NYC
+          zoom: 12,
+        });
 
-      map.current.on('load', () => {
-        setMapLoaded(true);
-      });
+        map.current.on('load', () => {
+          setMapLoaded(true);
+        });
+      } catch (error) {
+        console.error('Mapbox initialization error:', error);
+        setTokenError(error instanceof Error ? error.message : 'Failed to initialize map');
+        toast({
+          title: "Map Error",
+          description: error instanceof Error ? error.message : 'Failed to initialize map',
+          variant: "destructive"
+        });
+      }
     }
 
     return () => {
@@ -104,16 +129,19 @@ const Map = ({ pickupLocation, dropoffLocation, className = '' }: MapProps) => {
     <div className={`relative ${className}`}>
       {!mapboxToken && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-10 p-4">
-          <p className="mb-4 text-center">Please enter your Mapbox token to use the map</p>
+          <p className="mb-4 text-center">Please enter your Mapbox public token to use the map</p>
           <input 
             type="text" 
             className="uber-input w-full max-w-sm mb-2" 
-            placeholder="Enter your Mapbox public token"
+            placeholder="Enter your Mapbox public token (starts with pk.)"
             onChange={(e) => setMapboxToken(e.target.value)}
           />
           <p className="text-xs text-muted-foreground text-center">
             You can get a token at <a href="https://mapbox.com" className="text-primary underline" target="_blank" rel="noopener noreferrer">mapbox.com</a>
           </p>
+          {tokenError && (
+            <p className="text-red-500 mt-2 text-sm">{tokenError}</p>
+          )}
         </div>
       )}
       <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden" />
