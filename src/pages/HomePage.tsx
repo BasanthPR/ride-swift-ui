@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, Calendar, Clock, MapPin, Search } from "lucide-react";
+import { ChevronDown, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MainNavbar from "@/components/MainNavbar";
 
@@ -9,27 +9,24 @@ const HomePage = () => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
 
-  // Suggestions content based on the screenshot
+  // Suggestions content updated with working links
   const suggestions = [
     {
       id: "courier",
       title: "Courier",
       description: "Uber makes same-day item delivery easier than ever.",
-      imageUrl: "/lovable-uploads/96a33337-6e33-4932-9d49-4aff1e8cf6fb.png",
       link: "/deliver"
     },
     {
       id: "grocery",
       title: "Grocery",
       description: "Get groceries delivered to your door with Uber Eats.",
-      imageUrl: "/lovable-uploads/66a59deb-6418-4656-a5ee-5b5024825876.png",
-      link: "/eat"
+      link: "https://www.ubereats.com/"
     },
     {
       id: "hourly",
       title: "Hourly",
       description: "Request a trip for a block of time and make multiple stops.",
-      imageUrl: "/lovable-uploads/62db63dc-c84c-4dde-bec1-060080c38ebe.png",
       link: "/ride"
     }
   ];
@@ -101,14 +98,6 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="hidden lg:block">
-              <img 
-                src="/lovable-uploads/ad5fdb1a-0d6e-4559-90f8-c300672a3267.png" 
-                alt="Person getting into an Uber" 
-                className="w-full h-auto rounded-lg"
-              />
-            </div>
           </div>
         </section>
         
@@ -122,14 +111,15 @@ const HomePage = () => {
                 <h3 className="text-xl font-bold mb-2">{suggestion.title}</h3>
                 <p className="text-gray-700 mb-6">{suggestion.description}</p>
                 <div className="flex justify-between items-end">
-                  <Link to={suggestion.link} className="text-black font-medium hover:underline">
-                    Details
-                  </Link>
-                  <img 
-                    src={suggestion.imageUrl} 
-                    alt={suggestion.title} 
-                    className="h-24 w-24 object-contain"
-                  />
+                  {suggestion.id === "grocery" ? (
+                    <a href={suggestion.link} target="_blank" rel="noopener noreferrer" className="text-black font-medium hover:underline">
+                      Details
+                    </a>
+                  ) : (
+                    <Link to={suggestion.link} className="text-black font-medium hover:underline">
+                      Details
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}

@@ -1,13 +1,7 @@
 
 import { Link } from "react-router-dom";
-import { Search, ChevronDown, Globe } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 
 const MainNavbar = () => {
   return (
@@ -29,27 +23,8 @@ const MainNavbar = () => {
               Business
             </Link>
             <Link to="/deliver" className="text-white hover:text-gray-300 transition-colors">
-              Uber Eats
+              Deliver
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="text-white hover:text-gray-300 transition-colors flex items-center">
-                About <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white z-50">
-                <DropdownMenuItem>
-                  <Link to="/about-us" className="w-full">About us</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/how-uber-works" className="w-full">How Uber works</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/newsroom" className="w-full">Newsroom</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/investors" className="w-full">Investors</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </nav>
         </div>
         
@@ -58,21 +33,21 @@ const MainNavbar = () => {
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
-            <input
-              type="text"
-              placeholder="Search Uber.com"
-              className="py-2 pl-10 pr-4 bg-gray-100 text-black rounded-full w-full max-w-xs focus:outline-none"
-            />
+            <form action="https://www.uber.com/search" method="get" target="_blank">
+              <input
+                type="text"
+                name="q"
+                placeholder="Search Uber.com"
+                className="py-2 pl-10 pr-4 bg-gray-100 text-black rounded-full w-full max-w-xs focus:outline-none"
+              />
+            </form>
           </div>
           
-          <Button variant="ghost" size="sm" className="text-white">
-            <Globe className="h-5 w-5 mr-2" />
-            EN
-          </Button>
-          
-          <Button variant="ghost" size="sm" className="text-white">
-            Help
-          </Button>
+          <a href="https://help.uber.com/" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="sm" className="text-white">
+              Help
+            </Button>
+          </a>
           
           <Link to="/login">
             <Button variant="ghost" size="sm" className="text-white">
