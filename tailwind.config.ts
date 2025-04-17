@@ -52,6 +52,15 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+        uber: {
+          black: '#000000',
+          gray: '#F1F1F1',
+          blue: '#276EF1',
+          green: '#05A357',
+          lightBlack: '#333333',
+          lightGray: '#F6F6F7',
+          charcoal: '#1A1A1A',
+        },
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
