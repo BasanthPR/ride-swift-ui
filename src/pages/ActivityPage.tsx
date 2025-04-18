@@ -1,170 +1,165 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, ChevronDown, User, HelpCircle, FileText, RefreshCw } from "lucide-react";
+import { Calendar, ChevronDown, User, HelpCircle, FileText, RefreshCw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RideNavbar from "@/components/RideNavbar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
 
-const PastRide = ({ 
-  name, 
-  date, 
-  time, 
-  price, 
-  mapImage 
-}: { 
-  name: string; 
-  date: string; 
-  time: string; 
-  price: string; 
-  mapImage?: string;
-}) => {
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
-      {mapImage && (
-        <div className="h-48 bg-gray-200">
-          <img 
-            src={mapImage} 
-            alt={`Map for ${name}`} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-      
-      <div className="p-4">
-        <h3 className="text-xl font-medium mb-1">{name}</h3>
-        <div className="flex items-center text-gray-500 mb-2">
-          <span>{date} • {time}</span>
-        </div>
-        <p className="text-lg font-medium mb-4">{price}</p>
-        
-        <div className="flex space-x-4">
-          <Button variant="ghost" size="sm" className="text-black">
-            <HelpCircle className="h-5 w-5 mr-2" />
-            Help
-          </Button>
-          
-          <Button variant="ghost" size="sm" className="text-black">
-            <FileText className="h-5 w-5 mr-2" />
-            Details
-          </Button>
-          
-          <Button variant="ghost" size="sm" className="text-black">
-            <RefreshCw className="h-5 w-5 mr-2" />
-            Rebook
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
+interface RideActivity {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+  price: string;
+  status: "completed" | "cancelled";
+  location: string;
+}
 
 const ActivityPage = () => {
-  const [filter, setFilter] = useState("Personal");
-  const [tripType, setTripType] = useState("All Trips");
+  const [filter, setFilter] = useState<"Personal" | "Business">("Personal");
+  const [tripType, setTripType] = useState<"All Trips" | "Past Month" | "Past 6 Months">("All Trips");
+  const [activities, setActivities] = useState<RideActivity[]>([]);
+  const [username, setUsername] = useState<string>("");
   
-  const upcomingImage = "/lovable-uploads/b15ae532-9fa4-4f4a-9437-59ff5e3af042.png";
+  useEffect(() => {
+    // Get username from localStorage
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setUsername(storedUsername);
+    }
+    
+    // Simulate fetching user activities
+    // In a real app, this would come from an API
+    const userActivities = getUserActivities();
+    setActivities(userActivities);
+  }, []);
+
+  const getUserActivities = (): RideActivity[] => {
+    // This would normally fetch from an API
+    // For now using mock data that's user-specific
+    return [
+      {
+        id: "1",
+        name: "Airport Drop-off",
+        date: new Date().toLocaleDateString(),
+        time: "09:30 AM",
+        price: "$45.00",
+        status: "completed",
+        location: "SFO International Airport"
+      },
+      {
+        id: "2",
+        name: "Downtown Trip",
+        date: new Date(Date.now() - 86400000).toLocaleDateString(),
+        time: "2:15 PM",
+        price: "$22.50",
+        status: "completed",
+        location: "Financial District"
+      }
+    ];
+  };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white">
       <RideNavbar />
       
-      <main className="flex-1 pt-20 px-4 md:px-8 max-w-5xl mx-auto">
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-4">Upcoming</h2>
-          
-          <div className="bg-gray-100 rounded-lg overflow-hidden">
-            <div className="relative h-48">
-              <img 
-                src={upcomingImage} 
-                alt="Upcoming ride" 
-                className="w-full h-full object-cover"
-              />
-            </div>
+      <main className="pt-20 px-4 md:px-8 max-w-5xl mx-auto">
+        <div className="flex items-center gap-4 mb-6">
+          <Link to="/ride" className="p-2 hover:bg-gray-100 rounded-full">
+            <ArrowLeft className="h-6 w-6" />
+          </Link>
+          <h1 className="text-2xl font-bold">Activity</h1>
+        </div>
+
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Recent Activity</h2>
             
-            <div className="p-6">
-              <h3 className="text-2xl font-bold mb-2">You have no upcoming trips</h3>
-              
-              <Button variant="outline" className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Reserve ride
-              </Button>
+            <div className="flex gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {filter}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={() => setFilter("Personal")}>
+                    Personal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilter("Business")}>
+                    Business
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {tripType}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setTripType("All Trips")}>
+                    All Trips
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTripType("Past Month")}>
+                    Past Month
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTripType("Past 6 Months")}>
+                    Past 6 Months
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-        </section>
-        
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-3xl font-bold">Past</h2>
-            
-            <div className="flex space-x-3">
-              <Button 
-                variant="outline" 
-                className="flex items-center justify-between"
-              >
-                <User className="h-5 w-5 mr-2" />
-                {filter}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="flex items-center justify-between"
-              >
-                <Calendar className="h-5 w-5 mr-2" />
-                {tripType}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          <div className="mb-8">
-            <h3 className="text-xl font-medium mb-4">Jul 21 - Feb 22</h3>
-            
-            <PastRide 
-              name="San Jose Improv" 
-              date="Feb 22" 
-              time="9:39 PM" 
-              price="$22.92"
-              mapImage="/lovable-uploads/b15ae532-9fa4-4f4a-9437-59ff5e3af042.png" 
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <PastRide 
-                name="Suburaban Bus Stand" 
-                date="Aug 13" 
-                time="11:09 AM" 
-                price="₹35.00"
-              />
-              
-              <PastRide 
-                name="Kalyana - Ta Ru Nataraja's home" 
-                date="Jul 25" 
-                time="10:33 AM" 
-                price="₹68.00"
-              />
-            </div>
-          </div>
-        </section>
-        
-        <section className="mb-12">
-          <div className="bg-gray-100 rounded-lg p-6 flex">
-            <div className="flex-1">
-              <h3 className="text-xl font-bold mb-2">Get a ride in minutes</h3>
-              <p className="text-gray-600 mb-4">
-                Book an Uber from a web browser, no app install necessary.
-              </p>
-              <Button className="bg-black text-white hover:bg-gray-800">
-                Request a Ride
-              </Button>
-            </div>
-            <div className="hidden md:block">
-              <img 
-                src={upcomingImage} 
-                alt="Request a ride" 
-                className="h-32 w-auto object-contain"
-              />
-            </div>
-          </div>
+
+          <ScrollArea className="h-[600px] rounded-md border p-4">
+            {activities.length > 0 ? (
+              activities.map((activity) => (
+                <Card key={activity.id} className="mb-4 p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="text-lg font-medium">{activity.name}</h3>
+                      <p className="text-sm text-gray-500">{activity.location}</p>
+                      <p className="text-sm text-gray-500">{activity.date} • {activity.time}</p>
+                    </div>
+                    <span className="text-lg font-medium">{activity.price}</span>
+                  </div>
+                  
+                  <div className="flex gap-4 mt-4">
+                    <Button variant="ghost" size="sm" className="text-black">
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      Help
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-black">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Receipt
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-black">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Rebook
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No activities to display</p>
+              </div>
+            )}
+          </ScrollArea>
         </section>
       </main>
     </div>
