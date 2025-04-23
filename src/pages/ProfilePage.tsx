@@ -1,130 +1,107 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, LifeBuoy, Wallet, ClipboardList, User, Tag, LogOut, ChevronUp, ExternalLink } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import CustomerProfileDetails from "@/components/CustomerProfileDetails";
+import { CustomerProfile } from "@/types/customer";
 
 const ProfilePage = () => {
-  const [username, setUsername] = useState("User");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Get username from localStorage if it exists
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, []);
-
-  const handleSignOut = () => {
-    // Clear username from localStorage
-    localStorage.removeItem('username');
-    
-    toast({
-      title: "Signed out successfully",
-      description: "You have been signed out of your account."
-    });
-    
-    // Navigate to home after sign out
-    navigate('/');
-  };
+  const [profile, setProfile] = useState<CustomerProfile>({
+    id: "123-45-6789",
+    firstName: "John",
+    lastName: "Doe",
+    address: "123 Main St",
+    city: "San Francisco",
+    state: "CA",
+    zipCode: "94105",
+    phoneNumber: "(555) 123-4567",
+    email: "john.doe@example.com",
+    rating: 4.74,
+    cardDetails: {
+      last4Digits: "4321",
+      cardType: "Visa",
+      expiryMonth: 12,
+      expiryYear: 2025
+    },
+    ridesHistory: [
+      {
+        id: "1",
+        date: "2024-04-23",
+        destination: "SFO Airport",
+        price: 45.00
+      },
+      {
+        id: "2",
+        date: "2024-04-22",
+        destination: "Downtown SF",
+        price: 22.50
+      }
+    ],
+    reviews: [
+      {
+        id: "1",
+        rating: 5,
+        comment: "Great passenger, very punctual!",
+        date: "2024-04-23"
+      },
+      {
+        id: "2",
+        rating: 4.5,
+        comment: "Pleasant ride experience",
+        date: "2024-04-22"
+      }
+    ]
+  });
 
   const handleClose = () => {
     navigate(-1);
   };
 
-  const handleNavigate = (path: string) => {
-    navigate(path);
+  const handleManageAccount = () => {
+    navigate("/account/settings");
   };
 
-  const handleExternalLink = (url: string) => {
-    window.open(url, '_blank');
+  const handleSignOut = () => {
+    localStorage.removeItem('username');
+    toast({
+      title: "Signed out successfully",
+      description: "You have been signed out of your account."
+    });
+    navigate('/');
   };
 
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
-      <div className="max-w-md mx-auto p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold">{username}</h1>
-          
-          <div className="flex items-center">
-            <button className="p-2" onClick={handleClose}>
-              <ChevronUp className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex items-center mb-6">
-          <Star className="h-5 w-5 text-black mr-2" />
-          <span className="text-xl font-bold">4.74</span>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <button 
-            className="bg-gray-100 p-4 rounded-lg flex flex-col items-center hover:bg-gray-200 transition-colors"
-            onClick={() => handleExternalLink('https://help.uber.com')}
-          >
-            <LifeBuoy className="h-8 w-8 mb-2" />
-            <span className="text-lg font-medium">Help</span>
-          </button>
-          
-          <button 
-            className="bg-gray-100 p-4 rounded-lg flex flex-col items-center hover:bg-gray-200 transition-colors"
-            onClick={() => handleNavigate('/wallet')}
-          >
-            <Wallet className="h-8 w-8 mb-2" />
-            <span className="text-lg font-medium">Wallet</span>
-          </button>
-          
-          <button 
-            className="bg-gray-100 p-4 rounded-lg flex flex-col items-center hover:bg-gray-200 transition-colors"
-            onClick={() => handleNavigate('/activity')}
-          >
-            <ClipboardList className="h-8 w-8 mb-2" />
-            <span className="text-lg font-medium">Activity</span>
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">{`${profile.firstName} ${profile.lastName}`}</h1>
+          <button className="p-2" onClick={handleClose}>
+            <ChevronUp className="h-6 w-6" />
           </button>
         </div>
-        
-        <div className="bg-gray-100 p-4 rounded-lg mb-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-medium">Uber Cash</h2>
-            <span className="text-2xl font-bold">$0.00</span>
-          </div>
-        </div>
-        
-        <div className="space-y-4 mb-8">
-          <button 
-            className="w-full flex items-center text-left py-3 px-3 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => handleNavigate('/account')}
+
+        <CustomerProfileDetails profile={profile} />
+
+        <div className="mt-8 space-y-4">
+          <Button
+            variant="outline"
+            className="w-full py-4 text-xl"
+            onClick={handleManageAccount}
           >
-            <User className="h-6 w-6 mr-4" />
-            <span className="text-lg">Manage account</span>
-          </button>
+            Manage Account
+          </Button>
           
-          <button 
-            className="w-full flex items-center text-left py-3 px-3 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => handleNavigate('/promotions')}
+          <Button
+            variant="outline"
+            className="w-full py-4 text-xl text-red-600 hover:text-red-700"
+            onClick={handleSignOut}
           >
-            <Tag className="h-6 w-6 mr-4" />
-            <span className="text-lg">Promotions</span>
-          </button>
-          
-          <button 
-            className="w-full flex items-center text-left py-3 px-3 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => handleExternalLink('https://www.uber.com/legal')}
-          >
-            <ExternalLink className="h-6 w-6 mr-4" />
-            <span className="text-lg">Legal</span>
-          </button>
+            Sign out
+          </Button>
         </div>
-        
-        <button 
-          className="w-full py-4 bg-gray-100 rounded-lg text-red-600 text-xl font-medium hover:bg-gray-200 transition-colors"
-          onClick={handleSignOut}
-        >
-          Sign out
-        </button>
       </div>
     </div>
   );
