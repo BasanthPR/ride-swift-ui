@@ -21,11 +21,20 @@ export interface CustomerProfile {
     date: string;
     destination: string;
     price: number;
+    driverId?: string;
   }[];
   reviews: {
     id: string;
     rating: number;
     comment: string;
     date: string;
+    driverId?: string;
+  }[];
+  paymentMethods?: {
+    id: string;
+    type: string;
+    name: string;
+    isDefault: boolean;
+    last4Digits?: string;
   }[];
 }

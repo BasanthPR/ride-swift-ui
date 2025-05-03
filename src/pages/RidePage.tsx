@@ -2,14 +2,12 @@
 import { useState } from "react";
 import { Search, ChevronDown, Clock, MapPin, User, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog,
-  DialogContent, 
-  DialogTrigger
-} from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import Map from "@/components/Map";
 import RideNavbar from "@/components/RideNavbar";
+import PickupTimeModal from "@/components/PickupTimeModal";
+import RideSelectionScreen from "@/components/RideSelectionScreen";
+import RiderSelectionModal from "@/components/RiderSelectionModal";
 
 const RidePage = () => {
   const [pickup, setPickup] = useState("");
@@ -17,25 +15,11 @@ const RidePage = () => {
   const [additionalStops, setAdditionalStops] = useState<string[]>([]);
   const [pickupLocation, setPickupLocation] = useState<[number, number] | undefined>(undefined);
   const [dropoffLocation, setDropoffLocation] = useState<[number, number] | undefined>(undefined);
-  const [pickupModalOpen, setPickupModalOpen] = useState(false);
+  const [pickupTimeModalOpen, setPickupTimeModalOpen] = useState(false);
+  const [showRideSelection, setShowRideSelection] = useState(false);
   const [riderModalOpen, setRiderModalOpen] = useState(false);
   const [pickupTime, setPickupTime] = useState("Pickup now");
   const [selectedRider, setSelectedRider] = useState("For me");
-
-  // Pickup time options
-  const timeOptions = [
-    "Pickup now",
-    "Pickup in 15 minutes",
-    "Pickup in 30 minutes",
-    "Pickup in 45 minutes",
-    "Schedule for later"
-  ];
-
-  // Rider options
-  const riderOptions = [
-    "For me",
-    "For someone else"
-  ];
 
   const handleAddressSearch = () => {
     if (!pickup || !dropoff) {
@@ -51,10 +35,7 @@ const RidePage = () => {
     setPickupLocation([-122.1430, 37.4419]); // Palo Alto
     setDropoffLocation([-122.0841, 37.3893]); // Mountain View
     
-    toast({
-      title: "Searching for rides",
-      description: "Finding the best options for your trip"
-    });
+    setShowRideSelection(true);
   };
 
   const handleAddStop = () => {
@@ -80,6 +61,40 @@ const RidePage = () => {
     newStops[index] = value;
     setAdditionalStops(newStops);
   };
+
+  const handlePickupTimeSelect = (time: string, date: string) => {
+    setPickupTime(`${date} ${time}`);
+    setPickupTimeModalOpen(false);
+  };
+
+  const handleRiderSelect = (rider: string) => {
+    setSelectedRider(rider);
+    setRiderModalOpen(false);
+  };
+
+  const handleBackFromRideSelection = () => {
+    setShowRideSelection(false);
+  };
+
+  const handleRideSelected = (rideType: string, price: number) => {
+    toast({
+      title: "Ride Requested",
+      description: `Your ${rideType} ride has been requested. Total: $${price.toFixed(2)}`,
+    });
+    setShowRideSelection(false);
+    // In a real app, this would navigate to a ride confirmation page or tracking page
+  };
+
+  if (showRideSelection) {
+    return (
+      <RideSelectionScreen
+        pickupLocation={pickup}
+        dropoffLocation={dropoff}
+        onBack={handleBackFromRideSelection}
+        onRideSelected={handleRideSelected}
+      />
+    );
+  }
 
   return (
     <div className="h-screen w-full flex flex-col">
@@ -161,79 +176,33 @@ const RidePage = () => {
             </div>
             
             <div className="mb-4">
-              {/* Pickup time dropdown */}
-              <Dialog open={pickupModalOpen} onOpenChange={setPickupModalOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full flex items-center justify-between border border-gray-300 p-3"
-                  >
-                    <div className="flex items-center">
-                      <Clock className="h-5 w-5 mr-2" />
-                      <span>{pickupTime}</span>
-                    </div>
-                    <ChevronDown className="h-5 w-5" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <div className="py-2">
-                    <h3 className="text-lg font-medium mb-2">When do you want to be picked up?</h3>
-                    <div className="space-y-2">
-                      {timeOptions.map((option) => (
-                        <Button
-                          key={option}
-                          variant="ghost"
-                          className="w-full justify-start py-2 px-3 text-left"
-                          onClick={() => {
-                            setPickupTime(option);
-                            setPickupModalOpen(false);
-                          }}
-                        >
-                          {option}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              {/* Pickup time button opens the modal */}
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-between border border-gray-300 p-3"
+                onClick={() => setPickupTimeModalOpen(true)}
+              >
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 mr-2" />
+                  <span>{pickupTime}</span>
+                </div>
+                <ChevronDown className="h-5 w-5" />
+              </Button>
             </div>
             
             <div className="mb-4">
-              {/* Rider selection dropdown */}
-              <Dialog open={riderModalOpen} onOpenChange={setRiderModalOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full flex items-center justify-between border border-gray-300 p-3"
-                  >
-                    <div className="flex items-center">
-                      <User className="h-5 w-5 mr-2" />
-                      <span>{selectedRider}</span>
-                    </div>
-                    <ChevronDown className="h-5 w-5" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <div className="py-2">
-                    <h3 className="text-lg font-medium mb-2">Who is this ride for?</h3>
-                    <div className="space-y-2">
-                      {riderOptions.map((option) => (
-                        <Button
-                          key={option}
-                          variant="ghost"
-                          className="w-full justify-start py-2 px-3 text-left"
-                          onClick={() => {
-                            setSelectedRider(option);
-                            setRiderModalOpen(false);
-                          }}
-                        >
-                          {option}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              {/* Rider selection button opens the modal */}
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-between border border-gray-300 p-3"
+                onClick={() => setRiderModalOpen(true)}
+              >
+                <div className="flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  <span>{selectedRider}</span>
+                </div>
+                <ChevronDown className="h-5 w-5" />
+              </Button>
             </div>
             
             <Button
@@ -247,6 +216,22 @@ const RidePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Non-transparent modal for pickup time selection */}
+      {pickupTimeModalOpen && (
+        <PickupTimeModal 
+          onClose={() => setPickupTimeModalOpen(false)} 
+          onSelect={handlePickupTimeSelect} 
+        />
+      )}
+
+      {/* Rider selection modal */}
+      {riderModalOpen && (
+        <RiderSelectionModal 
+          onClose={() => setRiderModalOpen(false)} 
+          onSelect={handleRiderSelect}
+        />
+      )}
     </div>
   );
 };
