@@ -1,6 +1,7 @@
 
-import { useState } from "react";
-import { Search, ChevronDown, Clock, MapPin, User, Plus, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, ChevronDown, Clock, MapPin, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import Map from "@/components/Map";
@@ -8,11 +9,18 @@ import RideNavbar from "@/components/RideNavbar";
 import PickupTimeModal from "@/components/PickupTimeModal";
 import RideSelectionScreen from "@/components/RideSelectionScreen";
 import RiderSelectionModal from "@/components/RiderSelectionModal";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useUser } from "@/contexts/UserContext";
 
 const RidePage = () => {
+  const navigate = useNavigate();
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
-  const [additionalStops, setAdditionalStops] = useState<string[]>([]);
   const [pickupLocation, setPickupLocation] = useState<[number, number] | undefined>(undefined);
   const [dropoffLocation, setDropoffLocation] = useState<[number, number] | undefined>(undefined);
   const [pickupTimeModalOpen, setPickupTimeModalOpen] = useState(false);
@@ -20,6 +28,28 @@ const RidePage = () => {
   const [riderModalOpen, setRiderModalOpen] = useState(false);
   const [pickupTime, setPickupTime] = useState("Pickup now");
   const [selectedRider, setSelectedRider] = useState("For me");
+  const { isCustomerLoggedIn } = useUser();
+
+  // Check if user is logged in, redirect to login if not
+  useEffect(() => {
+    if (!isCustomerLoggedIn) {
+      toast({
+        title: "Login Required",
+        description: "Please login to book a ride",
+        variant: "destructive"
+      });
+      navigate('/login');
+    }
+  }, [isCustomerLoggedIn, navigate]);
+
+  // Load pickup and dropoff from session storage if available
+  useEffect(() => {
+    const storedPickup = sessionStorage.getItem('pickup');
+    const storedDropoff = sessionStorage.getItem('dropoff');
+    
+    if (storedPickup) setPickup(storedPickup);
+    if (storedDropoff) setDropoff(storedDropoff);
+  }, []);
 
   const handleAddressSearch = () => {
     if (!pickup || !dropoff) {
@@ -38,30 +68,6 @@ const RidePage = () => {
     setShowRideSelection(true);
   };
 
-  const handleAddStop = () => {
-    if (additionalStops.length < 3) {
-      setAdditionalStops([...additionalStops, ""]);
-    } else {
-      toast({
-        title: "Maximum stops reached",
-        description: "You can add up to 3 additional stops",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRemoveStop = (index: number) => {
-    const newStops = [...additionalStops];
-    newStops.splice(index, 1);
-    setAdditionalStops(newStops);
-  };
-
-  const updateStop = (index: number, value: string) => {
-    const newStops = [...additionalStops];
-    newStops[index] = value;
-    setAdditionalStops(newStops);
-  };
-
   const handlePickupTimeSelect = (time: string, date: string) => {
     setPickupTime(`${date} ${time}`);
     setPickupTimeModalOpen(false);
@@ -77,12 +83,13 @@ const RidePage = () => {
   };
 
   const handleRideSelected = (rideType: string, price: number) => {
-    toast({
-      title: "Ride Requested",
-      description: `Your ${rideType} ride has been requested. Total: $${price.toFixed(2)}`,
-    });
-    setShowRideSelection(false);
-    // In a real app, this would navigate to a ride confirmation page or tracking page
+    // Store ride info in session storage for payment page
+    sessionStorage.setItem('rideType', rideType);
+    sessionStorage.setItem('ridePrice', price.toString());
+    sessionStorage.setItem('ridePickup', pickup);
+    sessionStorage.setItem('rideDropoff', dropoff);
+    
+    navigate('/payment');
   };
 
   if (showRideSelection) {
@@ -127,86 +134,66 @@ const RidePage = () => {
                 />
               </div>
               
-              {/* Additional stops */}
-              {additionalStops.map((stop, index) => (
-                <div className="relative" key={`stop-${index}`}>
-                  <div className="absolute top-3 left-3">
-                    <div className="w-2 h-2 bg-black rounded-full"></div>
-                  </div>
-                  <div className="flex">
-                    <input
-                      type="text"
-                      placeholder={`Stop ${index + 1}`}
-                      className="w-full p-3 pl-8 border border-gray-300 rounded-l-md focus:outline-none"
-                      value={stop}
-                      onChange={(e) => updateStop(index, e.target.value)}
-                    />
-                    <Button 
-                      variant="ghost" 
-                      className="border border-gray-300 border-l-0 rounded-l-none rounded-r-md px-2"
-                      onClick={() => handleRemoveStop(index)}
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              
               <div className="relative">
                 <div className="absolute top-3 left-3">
                   <div className="w-2 h-2 bg-black rounded-full"></div>
                 </div>
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Dropoff location"
-                    className="w-full p-3 pl-8 border border-gray-300 rounded-l-md focus:outline-none"
-                    value={dropoff}
-                    onChange={(e) => setDropoff(e.target.value)}
-                  />
-                  <Button 
-                    variant="ghost" 
-                    className="border border-gray-300 border-l-0 rounded-l-none rounded-r-md px-2"
-                    onClick={handleAddStop}
-                  >
-                    <Plus className="h-5 w-5" />
-                  </Button>
-                </div>
+                <input
+                  type="text"
+                  placeholder="Dropoff location"
+                  className="w-full p-3 pl-8 border border-gray-300 rounded-md focus:outline-none"
+                  value={dropoff}
+                  onChange={(e) => setDropoff(e.target.value)}
+                />
               </div>
             </div>
             
             <div className="mb-4">
-              {/* Pickup time button opens the modal */}
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center justify-between border border-gray-300 p-3"
-                onClick={() => setPickupTimeModalOpen(true)}
-              >
-                <div className="flex items-center">
-                  <Clock className="h-5 w-5 mr-2" />
-                  <span>{pickupTime}</span>
-                </div>
-                <ChevronDown className="h-5 w-5" />
-              </Button>
+              {/* Pickup time dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-between border border-gray-300 p-3 h-12"
+                  >
+                    <div className="flex items-center">
+                      <Clock className="h-5 w-5 mr-2" />
+                      <span>{pickupTime}</span>
+                    </div>
+                    <ChevronDown className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-white">
+                  <DropdownMenuItem onSelect={() => setPickupTime("Pickup now")}>Pickup now</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setPickupTimeModalOpen(true)}>Schedule for later</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="mb-4">
-              {/* Rider selection button opens the modal */}
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center justify-between border border-gray-300 p-3"
-                onClick={() => setRiderModalOpen(true)}
-              >
-                <div className="flex items-center">
-                  <User className="h-5 w-5 mr-2" />
-                  <span>{selectedRider}</span>
-                </div>
-                <ChevronDown className="h-5 w-5" />
-              </Button>
+              {/* Rider selection dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-between border border-gray-300 p-3 h-12"
+                  >
+                    <div className="flex items-center">
+                      <User className="h-5 w-5 mr-2" />
+                      <span>{selectedRider}</span>
+                    </div>
+                    <ChevronDown className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-white">
+                  <DropdownMenuItem onSelect={() => setSelectedRider("For me")}>For me</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setRiderModalOpen(true)}>Add a passenger</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <Button
-              className="w-full bg-black hover:bg-gray-800 text-white p-3"
+              className="w-full bg-black hover:bg-gray-800 text-white p-3 h-12"
               onClick={handleAddressSearch}
               disabled={!pickup || !dropoff}
             >

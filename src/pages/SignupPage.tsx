@@ -2,10 +2,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { Apple, Github } from "lucide-react";
+import { Apple } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import { useUser } from "@/contexts/UserContext";
 
 const SignupPage = () => {
   const [firstName, setFirstName] = useState("");
@@ -14,6 +15,7 @@ const SignupPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { loginCustomer } = useUser();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,16 +23,39 @@ const SignupPage = () => {
     
     // For demo purposes, just check if all fields are provided
     if (firstName && lastName && email && password) {
-      // Store username in localStorage
-      localStorage.setItem('username', `${firstName} ${lastName}`);
+      // Create a customer profile
+      const customerProfile = {
+        id: `CUST-${Math.floor(Math.random() * 9000) + 1000}`,
+        firstName,
+        lastName,
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        phoneNumber: "",
+        email,
+        rating: 5.0,
+        cardDetails: {
+          last4Digits: "",
+          cardType: "",
+          expiryMonth: 0,
+          expiryYear: 0
+        },
+        ridesHistory: [],
+        reviews: [],
+        paymentMethods: []
+      };
+      
+      // Login the customer with the created profile
+      loginCustomer(customerProfile);
       
       setTimeout(() => {
         setIsLoading(false);
         toast({
           title: "Account created",
-          description: "Your account has been successfully created."
+          description: "Your account has been successfully created. Please complete your profile information."
         });
-        navigate('/');
+        navigate('/profile/edit');
       }, 1000);
     } else {
       setIsLoading(false);
@@ -46,16 +71,38 @@ const SignupPage = () => {
     setIsLoading(true);
     
     setTimeout(() => {
-      setIsLoading(false);
-      // Using a generic username based on the provider
-      const username = `${provider}User`;
-      localStorage.setItem('username', username);
+      // Create a customer profile for the third-party signup
+      const customerProfile = {
+        id: `CUST-${Math.floor(Math.random() * 9000) + 1000}`,
+        firstName: `${provider}`,
+        lastName: "User",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        phoneNumber: "",
+        email: `${provider.toLowerCase()}@example.com`,
+        rating: 5.0,
+        cardDetails: {
+          last4Digits: "",
+          cardType: "",
+          expiryMonth: 0,
+          expiryYear: 0
+        },
+        ridesHistory: [],
+        reviews: [],
+        paymentMethods: []
+      };
       
+      // Login the customer with the created profile
+      loginCustomer(customerProfile);
+      
+      setIsLoading(false);
       toast({
         title: "Account created",
-        description: `Your account has been successfully created with ${provider}.`
+        description: `Your account has been successfully created with ${provider}. Please complete your profile information.`
       });
-      navigate('/');
+      navigate('/profile/edit');
     }, 1000);
   };
 
@@ -71,7 +118,7 @@ const SignupPage = () => {
       
       <main className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold mb-6">Create your account</h1>
+          <h1 className="text-3xl font-bold mb-6">Create a rider account</h1>
           
           <div className="space-y-4 mb-8">
             <Button
@@ -178,6 +225,12 @@ const SignupPage = () => {
               Already have an account?{" "}
               <Link to="/login" className="text-black font-medium">
                 Sign in
+              </Link>
+            </p>
+            <p className="text-gray-600 mt-2">
+              Want to drive with Uber?{" "}
+              <Link to="/driver/signup" className="text-black font-medium">
+                Sign up to drive
               </Link>
             </p>
           </div>

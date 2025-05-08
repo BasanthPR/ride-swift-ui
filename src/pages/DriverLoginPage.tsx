@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import { useUser } from "@/contexts/UserContext";
 import {
   Form,
   FormControl,
@@ -29,6 +30,7 @@ const formSchema = z.object({
 const DriverLoginPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { loginDriver } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,31 +44,40 @@ const DriverLoginPage = () => {
     setIsLoading(true);
 
     try {
-      // In a real app, this would validate against an API
-      console.log("Login attempt:", values);
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // For demo purposes, we'll just check if the driver data exists
-      const driverData = localStorage.getItem('driverData');
-      if (!driverData) {
-        throw new Error("No driver account found. Please sign up first.");
-      }
-
-      const driver = JSON.parse(driverData);
-      if (driver.email !== values.email) {
-        throw new Error("Invalid email or password.");
-      }
-
-      // In a real app, we would validate the password with bcrypt
-      // Here we're just checking if the email matches for demo purposes
+      // For demo purposes, we'll create a mock driver profile
+      const driverProfile = {
+        id: `DRV-${Math.floor(Math.random() * 9000) + 1000}`,
+        firstName: values.email.split('@')[0],
+        lastName: "Driver",
+        address: "456 Oak St",
+        city: "San Francisco",
+        state: "CA",
+        zipCode: "94103",
+        phoneNumber: "(555) 987-6543",
+        email: values.email,
+        carDetails: {
+          make: "Toyota",
+          model: "Camry",
+          year: 2020,
+          licensePlate: "ABC123",
+          color: "Silver"
+        },
+        rating: 4.8,
+        reviews: [],
+        mediaContent: {
+          images: []
+        },
+        ridesHistory: []
+      };
       
-      localStorage.setItem('driverLoggedIn', 'true');
+      // Login the driver with the created profile
+      loginDriver(driverProfile);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "Welcome back!",
-        description: `You have successfully logged in as ${driver.firstName}.`,
+        description: `You have successfully logged in as ${driverProfile.firstName}.`,
       });
       
       navigate('/driver/dashboard');
