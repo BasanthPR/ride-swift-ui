@@ -13,7 +13,9 @@ const DriverDashboardPage = () => {
   const { driverProfile, isDriverLoggedIn, logoutDriver } = useUser();
   const [activeRides, setActiveRides] = useState<BillingInfo[]>([]);
   const [online, setOnline] = useState(false);
-  const [coordinates, setCoordinates] = useState<[number, number] | undefined>([-122.4194, 37.7749]); // San Francisco
+  const [coordinates, setCoordinates] = useState<[number, number]>([-122.4194, 37.7749]); // San Francisco
+  const [showNewRideAlert, setShowNewRideAlert] = useState(false);
+  const [newRide, setNewRide] = useState<BillingInfo | null>(null);
 
   // Check if driver is logged in
   useEffect(() => {
@@ -32,12 +34,14 @@ const DriverDashboardPage = () => {
       if (rideInfoJson) {
         try {
           const rideInfo = JSON.parse(rideInfoJson);
-          if (!activeRides.some(ride => ride.id === rideInfo.id)) {
-            setActiveRides(prev => [...prev, rideInfo]);
-            toast({
-              title: "New Ride Request!",
-              description: `From ${rideInfo.sourceLocation} to ${rideInfo.destinationLocation}`,
-            });
+          // Only show the alert for new rides that haven't been accepted/rejected yet
+          if (!activeRides.some(ride => ride.id === rideInfo.id) && !rideInfo.accepted) {
+            setNewRide(rideInfo);
+            setShowNewRideAlert(true);
+            
+            // Play sound alert
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869.wav');
+            audio.play().catch(e => console.log('Audio play failed:', e));
           }
         } catch (error) {
           console.error("Error parsing ride info:", error);
@@ -45,12 +49,16 @@ const DriverDashboardPage = () => {
       }
     };
     
-    // Check immediately and then every 5 seconds
+    // Check immediately and then every 5 seconds if online
     checkForNewRides();
-    const interval = setInterval(checkForNewRides, 5000);
+    const interval = setInterval(() => {
+      if (online) {
+        checkForNewRides();
+      }
+    }, 5000);
     
     return () => clearInterval(interval);
-  }, [isDriverLoggedIn, navigate, activeRides]);
+  }, [isDriverLoggedIn, navigate, activeRides, online]);
 
   const handleToggleOnline = () => {
     setOnline(!online);
@@ -62,13 +70,31 @@ const DriverDashboardPage = () => {
 
   const handleAcceptRide = (ride: BillingInfo) => {
     // Update the ride in active rides
-    setActiveRides(prev => prev.map(r => 
-      r.id === ride.id ? { ...r, accepted: true } : r
-    ));
+    const updatedRide = { ...ride, accepted: true };
+    setActiveRides(prev => [...prev, updatedRide]);
+    
+    // Update sessionStorage
+    sessionStorage.setItem('activeRide', JSON.stringify(updatedRide));
+    
+    setShowNewRideAlert(false);
+    setNewRide(null);
     
     toast({
       title: "Ride Accepted",
       description: `You've accepted the ride to ${ride.destinationLocation}`,
+    });
+  };
+
+  const handleRejectRide = (ride: BillingInfo) => {
+    // Remove from session storage
+    sessionStorage.removeItem('activeRide');
+    
+    setShowNewRideAlert(false);
+    setNewRide(null);
+    
+    toast({
+      title: "Ride Rejected",
+      description: "You've rejected the ride request",
     });
   };
 
@@ -81,6 +107,7 @@ const DriverDashboardPage = () => {
     // Remove the ride from active rides after 10 seconds (simulating completion)
     setTimeout(() => {
       setActiveRides(prev => prev.filter(r => r.id !== ride.id));
+      sessionStorage.removeItem('activeRide');
       toast({
         title: "Ride Completed",
         description: `You've completed the ride to ${ride.destinationLocation}`,
@@ -97,6 +124,10 @@ const DriverDashboardPage = () => {
     navigate('/');
   };
 
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
   if (!driverProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -111,10 +142,12 @@ const DriverDashboardPage = () => {
       <div className="bg-black text-white p-4 flex justify-between items-center">
         <div className="text-xl font-bold">Uber Driver</div>
         <div className="flex items-center space-x-4">
-          <Bell className="h-6 w-6" />
+          <button className="cursor-pointer">
+            <Bell className="h-6 w-6" />
+          </button>
           <button 
             onClick={handleToggleOnline} 
-            className={`px-4 py-1 rounded-full ${online ? 'bg-green-500' : 'bg-gray-500'}`}
+            className={`px-4 py-1 rounded-full cursor-pointer ${online ? 'bg-green-500' : 'bg-gray-500'}`}
           >
             {online ? 'Online' : 'Offline'}
           </button>
@@ -153,6 +186,48 @@ const DriverDashboardPage = () => {
           </div>
         </div>
         
+        {/* New Ride Alert Modal */}
+        {showNewRideAlert && newRide && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold mb-2">New Ride Request!</h3>
+              <div className="my-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">From:</span>
+                  <span className="font-medium">{newRide.sourceLocation}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">To:</span>
+                  <span className="font-medium">{newRide.destinationLocation}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Distance:</span>
+                  <span className="font-medium">{newRide.distanceCovered} miles</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Fare:</span>
+                  <span className="font-medium">${newRide.totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="mt-6 flex space-x-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleRejectRide(newRide)}
+                >
+                  Reject
+                </Button>
+                <Button 
+                  className="flex-1 bg-black text-white"
+                  onClick={() => handleAcceptRide(newRide)}
+                >
+                  Accept
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Active Rides Panel */}
         {activeRides.length > 0 && (
           <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg max-h-64 overflow-y-auto">
@@ -168,19 +243,19 @@ const DriverDashboardPage = () => {
                       </div>
                     </div>
                     <div>
-                      {!ride.accepted ? (
-                        <Button 
-                          variant="default"
-                          onClick={() => handleAcceptRide(ride)}
-                        >
-                          Accept
-                        </Button>
-                      ) : (
+                      {ride.accepted ? (
                         <Button 
                           variant="default" 
                           onClick={() => handleStartRide(ride)}
                         >
                           Start Ride
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="default"
+                          onClick={() => handleAcceptRide(ride)}
+                        >
+                          Accept
                         </Button>
                       )}
                     </div>
@@ -192,29 +267,29 @@ const DriverDashboardPage = () => {
         )}
       </div>
       
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - Fixed clickability */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-3">
-        <button className="flex flex-col items-center">
+        <button className="flex flex-col items-center cursor-pointer" onClick={() => {}}>
           <Car className="h-6 w-6" />
           <span className="text-xs mt-1">Home</span>
         </button>
         
-        <button className="flex flex-col items-center">
+        <button className="flex flex-col items-center cursor-pointer" onClick={() => handleNavigate('/activity')}>
           <Clipboard className="h-6 w-6" />
           <span className="text-xs mt-1">Activity</span>
         </button>
         
-        <button className="flex flex-col items-center">
+        <button className="flex flex-col items-center cursor-pointer" onClick={() => handleNavigate('/profile')}>
           <User className="h-6 w-6" />
           <span className="text-xs mt-1">Account</span>
         </button>
         
-        <button className="flex flex-col items-center" onClick={() => navigate('/profile')}>
+        <button className="flex flex-col items-center cursor-pointer" onClick={() => handleNavigate('/profile')}>
           <Settings className="h-6 w-6" />
           <span className="text-xs mt-1">Settings</span>
         </button>
         
-        <button className="flex flex-col items-center" onClick={handleLogout}>
+        <button className="flex flex-col items-center cursor-pointer" onClick={handleLogout}>
           <LogOut className="h-6 w-6" />
           <span className="text-xs mt-1">Logout</span>
         </button>

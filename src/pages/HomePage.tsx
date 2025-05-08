@@ -15,6 +15,7 @@ import { useUser } from "@/contexts/UserContext";
 const HomePage = () => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [selectedTime, setSelectedTime] = useState("Now");
   const navigate = useNavigate();
   const { isCustomerLoggedIn } = useUser();
 
@@ -31,7 +32,7 @@ const HomePage = () => {
   const suggestions = [
     {
       id: "courier",
-      title: "Courier",
+      title: "Courier Service",
       description: "Service not available at this time.",
       disabled: true
     },
@@ -97,14 +98,18 @@ const HomePage = () => {
                       <Button variant="outline" className="flex items-center justify-between w-full h-14">
                         <div className="flex items-center">
                           <Clock className="h-5 w-5 mr-2" />
-                          Now
+                          {selectedTime}
                         </div>
                         <ChevronDown className="h-5 w-5" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 bg-white">
-                      <DropdownMenuItem>Now</DropdownMenuItem>
-                      <DropdownMenuItem>Schedule for later</DropdownMenuItem>
+                    <DropdownMenuContent className="w-56 bg-white" align="end">
+                      <DropdownMenuItem onSelect={() => setSelectedTime("Now")}>
+                        Now
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => setSelectedTime("Schedule")}>
+                        Schedule for later
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -133,7 +138,7 @@ const HomePage = () => {
           </div>
         </section>
         
-        {/* Suggestions Section */}
+        {/* Suggestions Section - With Courier disabled */}
         <section className="py-12 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold mb-8">Suggestions</h2>
           
@@ -141,7 +146,7 @@ const HomePage = () => {
             {suggestions.map((suggestion) => (
               <div 
                 key={suggestion.id} 
-                className={`bg-gray-100 p-6 rounded-lg ${suggestion.disabled ? 'opacity-60' : ''}`}
+                className={`bg-gray-100 p-6 rounded-lg ${suggestion.disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <h3 className="text-xl font-bold mb-2">{suggestion.title}</h3>
                 <p className="text-gray-700 mb-6">{suggestion.description}</p>

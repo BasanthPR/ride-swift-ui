@@ -89,6 +89,23 @@ const RidePage = () => {
     sessionStorage.setItem('ridePickup', pickup);
     sessionStorage.setItem('rideDropoff', dropoff);
     
+    // Create active ride entry in session storage for driver to see
+    const rideInfo = {
+      id: `ride-${Date.now()}`,
+      date: new Date().toISOString(),
+      pickupTime: new Date().toISOString(),
+      dropoffTime: new Date(Date.now() + 30 * 60000).toISOString(), // 30 minutes later
+      distanceCovered: 5.2, // Example distance
+      totalAmount: price,
+      sourceLocation: pickup,
+      destinationLocation: dropoff,
+      driverId: "driver-123", // This would be assigned dynamically in a real app
+      customerId: "customer-456", // This would be the actual customer ID
+      accepted: false
+    };
+    
+    sessionStorage.setItem('activeRide', JSON.stringify(rideInfo));
+    
     navigate('/payment');
   };
 
@@ -115,9 +132,9 @@ const RidePage = () => {
           className="h-full w-full absolute inset-0"
         />
         
-        {/* Ride request form overlay */}
-        <div className="absolute top-4 left-4 md:left-8 z-10 max-w-md">
-          <div className="bg-white rounded-lg shadow-lg p-6">
+        {/* Ride request form overlay - Now with sticky positioning */}
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <div className="bg-white p-4 shadow-lg">
             <h2 className="text-2xl font-bold mb-4">Get a ride</h2>
             
             <div className="space-y-3 mb-4">
@@ -148,13 +165,13 @@ const RidePage = () => {
               </div>
             </div>
             
-            <div className="mb-4">
-              {/* Pickup time dropdown */}
+            <div className="mb-4 flex gap-4">
+              {/* Pickup time dropdown - Updated to work properly */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="w-full flex items-center justify-between border border-gray-300 p-3 h-12"
+                    className="w-1/2 flex items-center justify-between border border-gray-300 p-3 h-12"
                   >
                     <div className="flex items-center">
                       <Clock className="h-5 w-5 mr-2" />
@@ -163,20 +180,22 @@ const RidePage = () => {
                     <ChevronDown className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white">
-                  <DropdownMenuItem onSelect={() => setPickupTime("Pickup now")}>Pickup now</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setPickupTimeModalOpen(true)}>Schedule for later</DropdownMenuItem>
+                <DropdownMenuContent align="start" className="w-56 bg-white">
+                  <DropdownMenuItem onSelect={() => setPickupTime("Pickup now")}>
+                    Pickup now
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setPickupTimeModalOpen(true)}>
+                    Schedule for later
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-            
-            <div className="mb-4">
+              
               {/* Rider selection dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="w-full flex items-center justify-between border border-gray-300 p-3 h-12"
+                    className="w-1/2 flex items-center justify-between border border-gray-300 p-3 h-12"
                   >
                     <div className="flex items-center">
                       <User className="h-5 w-5 mr-2" />
@@ -185,9 +204,13 @@ const RidePage = () => {
                     <ChevronDown className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white">
-                  <DropdownMenuItem onSelect={() => setSelectedRider("For me")}>For me</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setRiderModalOpen(true)}>Add a passenger</DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-56 bg-white">
+                  <DropdownMenuItem onSelect={() => setSelectedRider("For me")}>
+                    For me
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setRiderModalOpen(true)}>
+                    Add a passenger
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -204,7 +227,7 @@ const RidePage = () => {
         </div>
       </div>
 
-      {/* Non-transparent modal for pickup time selection */}
+      {/* Updated modal for pickup time selection - Now fully opaque */}
       {pickupTimeModalOpen && (
         <PickupTimeModal 
           onClose={() => setPickupTimeModalOpen(false)} 

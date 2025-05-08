@@ -7,10 +7,11 @@ import { toast } from "@/components/ui/use-toast";
 type MapProps = {
   pickupLocation?: [number, number];
   dropoffLocation?: [number, number];
+  driverLocation?: [number, number]; // Add driverLocation prop
   className?: string;
 };
 
-const Map = ({ pickupLocation, dropoffLocation, className = '' }: MapProps) => {
+const Map = ({ pickupLocation, dropoffLocation, driverLocation, className = '' }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -112,18 +113,35 @@ const Map = ({ pickupLocation, dropoffLocation, className = '' }: MapProps) => {
         .addTo(map.current);
     }
     
+    // Add driver marker if available
+    if (driverLocation) {
+      const el = document.createElement('div');
+      el.className = 'driver-marker';
+      el.style.backgroundColor = '#FFD300'; // Yellow for driver
+      el.style.width = '18px';
+      el.style.height = '18px';
+      el.style.borderRadius = '50%';
+      el.style.border = '2px solid white';
+      
+      new mapboxgl.Marker(el)
+        .setLngLat(driverLocation)
+        .addTo(map.current);
+    }
+    
     // If both locations are set, fit bounds to include both
-    if (pickupLocation && dropoffLocation && map.current) {
+    if ((pickupLocation && dropoffLocation) || (pickupLocation && driverLocation) || (dropoffLocation && driverLocation)) {
       const bounds = new mapboxgl.LngLatBounds();
-      bounds.extend(pickupLocation);
-      bounds.extend(dropoffLocation);
+      
+      if (pickupLocation) bounds.extend(pickupLocation);
+      if (dropoffLocation) bounds.extend(dropoffLocation);
+      if (driverLocation) bounds.extend(driverLocation);
       
       map.current.fitBounds(bounds, {
         padding: 100,
         maxZoom: 15
       });
     }
-  }, [pickupLocation, dropoffLocation, mapLoaded]);
+  }, [pickupLocation, dropoffLocation, driverLocation, mapLoaded]);
 
   return (
     <div className={`relative ${className}`}>
@@ -132,7 +150,7 @@ const Map = ({ pickupLocation, dropoffLocation, className = '' }: MapProps) => {
           <p className="mb-4 text-center">Please enter your Mapbox public token to use the map</p>
           <input 
             type="text" 
-            className="uber-input w-full max-w-sm mb-2" 
+            className="w-full max-w-sm mb-2 p-2 border border-gray-300 rounded" 
             placeholder="Enter your Mapbox public token (starts with pk.)"
             onChange={(e) => setMapboxToken(e.target.value)}
           />
