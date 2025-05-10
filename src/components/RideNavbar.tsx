@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Car, Calendar, UtensilsCrossed } from "lucide-react";
+import { Car, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const RideNavbar = () => {
@@ -44,16 +44,6 @@ const RideNavbar = () => {
             <Calendar className="h-5 w-5 mr-2" />
             Hourly
           </Link>
-          
-          <a 
-            href="https://www.ubereats.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center py-4 px-2 md:px-4 text-gray-500 font-medium hover:text-black whitespace-nowrap"
-          >
-            <UtensilsCrossed className="h-5 w-5 mr-2" />
-            Eat
-          </a>
         </nav>
         
         <div className="ml-auto flex items-center space-x-4">

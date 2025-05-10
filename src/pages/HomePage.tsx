@@ -28,7 +28,7 @@ const HomePage = () => {
     }
   };
 
-  // Suggestion with only Hourly option (removed Courier)
+  // Suggestion with only Hourly option
   const suggestions = [
     {
       id: "hourly",
@@ -132,7 +132,7 @@ const HomePage = () => {
           </div>
         </section>
         
-        {/* Suggestions Section - Only Hourly (removed Courier) */}
+        {/* Suggestions Section - Only Hourly */}
         {suggestions.length > 0 && (
           <section className="py-12 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto">
             <h2 className="text-3xl font-bold mb-8">Suggestions</h2>

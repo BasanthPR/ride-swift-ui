@@ -8,14 +8,18 @@ import { useUser } from "@/contexts/UserContext";
 import Map from "@/components/Map";
 import { BillingInfo } from "@/types/billing";
 
+interface ExtendedBillingInfo extends BillingInfo {
+  accepted?: boolean;
+}
+
 const DriverDashboardPage = () => {
   const navigate = useNavigate();
   const { driverProfile, isDriverLoggedIn, logoutDriver } = useUser();
-  const [activeRides, setActiveRides] = useState<BillingInfo[]>([]);
+  const [activeRides, setActiveRides] = useState<ExtendedBillingInfo[]>([]);
   const [online, setOnline] = useState(false);
   const [coordinates, setCoordinates] = useState<[number, number]>([-122.4194, 37.7749]); // San Francisco
   const [showNewRideAlert, setShowNewRideAlert] = useState(false);
-  const [newRide, setNewRide] = useState<BillingInfo | null>(null);
+  const [newRide, setNewRide] = useState<ExtendedBillingInfo | null>(null);
   const [notifications, setNotifications] = useState(0);
 
   // Check if driver is logged in
@@ -34,7 +38,7 @@ const DriverDashboardPage = () => {
       const rideInfoJson = sessionStorage.getItem('activeRide');
       if (rideInfoJson) {
         try {
-          const rideInfo = JSON.parse(rideInfoJson);
+          const rideInfo = JSON.parse(rideInfoJson) as ExtendedBillingInfo;
           // Only show the alert for new rides that haven't been accepted/rejected yet
           if (!activeRides.some(ride => ride.id === rideInfo.id) && !rideInfo.accepted) {
             setNewRide(rideInfo);
@@ -78,7 +82,7 @@ const DriverDashboardPage = () => {
     });
   };
 
-  const handleAcceptRide = (ride: BillingInfo) => {
+  const handleAcceptRide = (ride: ExtendedBillingInfo) => {
     // Update the ride in active rides
     const updatedRide = { ...ride, accepted: true };
     setActiveRides(prev => [...prev, updatedRide]);
@@ -95,7 +99,7 @@ const DriverDashboardPage = () => {
     });
   };
 
-  const handleRejectRide = (ride: BillingInfo) => {
+  const handleRejectRide = (ride: ExtendedBillingInfo) => {
     // Remove from session storage
     sessionStorage.removeItem('activeRide');
     
@@ -108,7 +112,7 @@ const DriverDashboardPage = () => {
     });
   };
 
-  const handleStartRide = (ride: BillingInfo) => {
+  const handleStartRide = (ride: ExtendedBillingInfo) => {
     toast({
       title: "Ride Started",
       description: "You've started the ride. Drive safely!",
@@ -134,7 +138,7 @@ const DriverDashboardPage = () => {
     navigate('/');
   };
 
-  const handleNavigate = (path: string) => {
+  const handleNavigateAs = (path: string) => {
     navigate(path);
   };
 
@@ -155,6 +159,7 @@ const DriverDashboardPage = () => {
           <button 
             className="relative cursor-pointer" 
             onClick={handleNotificationClick}
+            aria-label="Notifications"
           >
             <Bell className="h-6 w-6" />
             {notifications > 0 && (
@@ -166,6 +171,7 @@ const DriverDashboardPage = () => {
           <button 
             onClick={handleToggleOnline} 
             className={`px-4 py-1 rounded-full cursor-pointer ${online ? 'bg-green-500' : 'bg-gray-500'}`}
+            aria-label={online ? "Go Offline" : "Go Online"}
           >
             {online ? 'Online' : 'Offline'}
           </button>
@@ -248,7 +254,7 @@ const DriverDashboardPage = () => {
         
         {/* Active Rides Panel */}
         {activeRides.length > 0 && (
-          <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg max-h-64 overflow-y-auto">
+          <div className="absolute bottom-20 left-4 right-4 bg-white rounded-lg shadow-lg max-h-64 overflow-y-auto">
             <div className="p-4">
               <h3 className="font-bold text-lg mb-2">Active Rides</h3>
               {activeRides.map((ride) => (
@@ -287,10 +293,10 @@ const DriverDashboardPage = () => {
         )}
       </div>
       
-      {/* Bottom Navigation - Fixed clickability */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-3">
+      {/* Bottom Navigation - Fixed pointer-events issue */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-3 z-10">
         <button 
-          className="flex flex-col items-center cursor-pointer" 
+          className="flex flex-col items-center p-2 cursor-pointer" 
           onClick={() => {}} 
           aria-label="Home"
         >
@@ -299,8 +305,8 @@ const DriverDashboardPage = () => {
         </button>
         
         <button 
-          className="flex flex-col items-center cursor-pointer" 
-          onClick={() => handleNavigate('/activity')} 
+          className="flex flex-col items-center p-2 cursor-pointer" 
+          onClick={() => handleNavigateAs('/driver/activity')} 
           aria-label="Activity"
         >
           <Clipboard className="h-6 w-6" />
@@ -308,8 +314,8 @@ const DriverDashboardPage = () => {
         </button>
         
         <button 
-          className="flex flex-col items-center cursor-pointer" 
-          onClick={() => handleNavigate('/profile')} 
+          className="flex flex-col items-center p-2 cursor-pointer" 
+          onClick={() => handleNavigateAs('/driver/account')} 
           aria-label="Account"
         >
           <User className="h-6 w-6" />
@@ -317,8 +323,8 @@ const DriverDashboardPage = () => {
         </button>
         
         <button 
-          className="flex flex-col items-center cursor-pointer" 
-          onClick={() => handleNavigate('/profile')} 
+          className="flex flex-col items-center p-2 cursor-pointer" 
+          onClick={() => handleNavigateAs('/driver/settings')} 
           aria-label="Settings"
         >
           <Settings className="h-6 w-6" />
@@ -326,7 +332,7 @@ const DriverDashboardPage = () => {
         </button>
         
         <button 
-          className="flex flex-col items-center cursor-pointer" 
+          className="flex flex-col items-center p-2 cursor-pointer" 
           onClick={handleLogout} 
           aria-label="Logout"
         >

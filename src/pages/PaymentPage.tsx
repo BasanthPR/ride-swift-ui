@@ -78,7 +78,8 @@ const PaymentPage = () => {
       driverId: "",
       customerId: customerProfile?.id || "",
       predictedPrice: price,
-      actualPrice: price
+      actualPrice: price,
+      accepted: false
     };
     
     // Store this in session storage for the driver to pick up
@@ -110,9 +111,9 @@ const PaymentPage = () => {
         <h1 className="text-xl font-bold ml-2">Payment</h1>
       </div>
       
-      <div className="relative flex-1">
+      <div className="flex-1 flex flex-col items-center">
         {/* Map area (smaller) */}
-        <div className="h-56">
+        <div className="w-full h-56">
           <Map 
             pickupLocation={pickupLocation}
             dropoffLocation={dropoffLocation}
@@ -121,7 +122,7 @@ const PaymentPage = () => {
         </div>
         
         {/* Payment content */}
-        <div className="bg-white rounded-t-3xl relative -mt-6 flex-1 shadow-lg">
+        <div className="bg-white rounded-t-3xl relative -mt-6 w-full max-w-md mx-auto shadow-lg flex-1">
           <div className="p-6">
             <div className="flex justify-center mb-2">
               <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
@@ -203,21 +204,21 @@ const PaymentPage = () => {
             
             <div className="mb-6">
               <div className="flex justify-between mb-2">
-                <span>Base fare</span>
-                <span>${(price * 0.8).toFixed(2)}</span>
+                <span className="text-black font-medium">Base fare</span>
+                <span className="text-black font-medium">${(price * 0.8).toFixed(2)}</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span>Service fee</span>
-                <span>${(price * 0.2).toFixed(2)}</span>
+                <span className="text-black font-medium">Service fee</span>
+                <span className="text-black font-medium">${(price * 0.2).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>${price.toFixed(2)}</span>
+                <span className="text-black">Total</span>
+                <span className="text-black">${price.toFixed(2)}</span>
               </div>
             </div>
             
             <Button 
-              className="w-full py-6 text-lg bg-black hover:bg-gray-800"
+              className="w-full py-6 text-lg bg-black hover:bg-gray-800 text-white"
               onClick={handleCompletePayment}
               disabled={isProcessing || !selectedPaymentMethod}
             >

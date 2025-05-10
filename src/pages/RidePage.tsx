@@ -124,7 +124,7 @@ const RidePage = () => {
     <div className="h-screen w-full flex flex-col">
       <RideNavbar />
       
-      <div className="flex-1 relative pt-16">
+      <div className="flex-1 relative pt-20">
         {/* Map takes the full screen */}
         <Map 
           pickupLocation={pickupLocation}
@@ -133,8 +133,8 @@ const RidePage = () => {
         />
         
         {/* Ride request form overlay - Centered and not spread across the whole page */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex justify-center">
-          <div className="bg-white p-6 shadow-lg rounded-lg mt-4 max-w-md w-full mx-4">
+        <div className="absolute inset-0 z-20 flex justify-center items-start">
+          <div className="bg-white p-6 shadow-lg rounded-lg mt-4 max-w-md w-full mx-auto">
             <h2 className="text-2xl font-bold mb-4">Get a ride</h2>
             
             <div className="space-y-3 mb-4">
