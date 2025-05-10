@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Car, Package, Calendar, UtensilsCrossed } from "lucide-react";
+import { Car, Calendar, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const RideNavbar = () => {
@@ -25,16 +25,6 @@ const RideNavbar = () => {
           >
             <Car className="h-5 w-5 mr-2" />
             Ride
-          </Link>
-          
-          <Link 
-            to="/deliver" 
-            className={`flex items-center py-4 px-2 md:px-4 whitespace-nowrap ${
-              currentPath === "/deliver" ? "border-b-2 border-black text-black font-medium" : "text-gray-500 font-medium hover:text-black"
-            }`}
-          >
-            <Package className="h-5 w-5 mr-2" />
-            Courier
           </Link>
           
           <a 

@@ -132,9 +132,9 @@ const RidePage = () => {
           className="h-full w-full absolute inset-0"
         />
         
-        {/* Ride request form overlay - Now with sticky positioning */}
-        <div className="absolute top-0 left-0 right-0 z-20">
-          <div className="bg-white p-4 shadow-lg">
+        {/* Ride request form overlay - Centered and not spread across the whole page */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex justify-center">
+          <div className="bg-white p-6 shadow-lg rounded-lg mt-4 max-w-md w-full mx-4">
             <h2 className="text-2xl font-bold mb-4">Get a ride</h2>
             
             <div className="space-y-3 mb-4">
@@ -166,7 +166,7 @@ const RidePage = () => {
             </div>
             
             <div className="mb-4 flex gap-4">
-              {/* Pickup time dropdown - Updated to work properly */}
+              {/* Pickup time dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -227,7 +227,7 @@ const RidePage = () => {
         </div>
       </div>
 
-      {/* Updated modal for pickup time selection - Now fully opaque */}
+      {/* Updated modal for pickup time selection */}
       {pickupTimeModalOpen && (
         <PickupTimeModal 
           onClose={() => setPickupTimeModalOpen(false)} 

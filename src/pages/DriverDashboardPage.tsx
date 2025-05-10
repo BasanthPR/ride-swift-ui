@@ -16,6 +16,7 @@ const DriverDashboardPage = () => {
   const [coordinates, setCoordinates] = useState<[number, number]>([-122.4194, 37.7749]); // San Francisco
   const [showNewRideAlert, setShowNewRideAlert] = useState(false);
   const [newRide, setNewRide] = useState<BillingInfo | null>(null);
+  const [notifications, setNotifications] = useState(0);
 
   // Check if driver is logged in
   useEffect(() => {
@@ -38,6 +39,7 @@ const DriverDashboardPage = () => {
           if (!activeRides.some(ride => ride.id === rideInfo.id) && !rideInfo.accepted) {
             setNewRide(rideInfo);
             setShowNewRideAlert(true);
+            setNotifications(prev => prev + 1);
             
             // Play sound alert
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869.wav');
@@ -65,6 +67,14 @@ const DriverDashboardPage = () => {
     toast({
       title: online ? "You're offline" : "You're online",
       description: online ? "You won't receive any ride requests" : "You'll now receive ride requests",
+    });
+  };
+
+  const handleNotificationClick = () => {
+    setNotifications(0);
+    toast({
+      title: "Notifications",
+      description: "No new notifications",
     });
   };
 
@@ -142,8 +152,16 @@ const DriverDashboardPage = () => {
       <div className="bg-black text-white p-4 flex justify-between items-center">
         <div className="text-xl font-bold">Uber Driver</div>
         <div className="flex items-center space-x-4">
-          <button className="cursor-pointer">
+          <button 
+            className="relative cursor-pointer" 
+            onClick={handleNotificationClick}
+          >
             <Bell className="h-6 w-6" />
+            {notifications > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white w-4 h-4 flex items-center justify-center rounded-full">
+                {notifications}
+              </span>
+            )}
           </button>
           <button 
             onClick={handleToggleOnline} 
@@ -247,6 +265,7 @@ const DriverDashboardPage = () => {
                         <Button 
                           variant="default" 
                           onClick={() => handleStartRide(ride)}
+                          className="bg-black text-white hover:bg-gray-800"
                         >
                           Start Ride
                         </Button>
@@ -254,6 +273,7 @@ const DriverDashboardPage = () => {
                         <Button 
                           variant="default"
                           onClick={() => handleAcceptRide(ride)}
+                          className="bg-black text-white hover:bg-gray-800"
                         >
                           Accept
                         </Button>
@@ -269,27 +289,47 @@ const DriverDashboardPage = () => {
       
       {/* Bottom Navigation - Fixed clickability */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around p-3">
-        <button className="flex flex-col items-center cursor-pointer" onClick={() => {}}>
+        <button 
+          className="flex flex-col items-center cursor-pointer" 
+          onClick={() => {}} 
+          aria-label="Home"
+        >
           <Car className="h-6 w-6" />
           <span className="text-xs mt-1">Home</span>
         </button>
         
-        <button className="flex flex-col items-center cursor-pointer" onClick={() => handleNavigate('/activity')}>
+        <button 
+          className="flex flex-col items-center cursor-pointer" 
+          onClick={() => handleNavigate('/activity')} 
+          aria-label="Activity"
+        >
           <Clipboard className="h-6 w-6" />
           <span className="text-xs mt-1">Activity</span>
         </button>
         
-        <button className="flex flex-col items-center cursor-pointer" onClick={() => handleNavigate('/profile')}>
+        <button 
+          className="flex flex-col items-center cursor-pointer" 
+          onClick={() => handleNavigate('/profile')} 
+          aria-label="Account"
+        >
           <User className="h-6 w-6" />
           <span className="text-xs mt-1">Account</span>
         </button>
         
-        <button className="flex flex-col items-center cursor-pointer" onClick={() => handleNavigate('/profile')}>
+        <button 
+          className="flex flex-col items-center cursor-pointer" 
+          onClick={() => handleNavigate('/profile')} 
+          aria-label="Settings"
+        >
           <Settings className="h-6 w-6" />
           <span className="text-xs mt-1">Settings</span>
         </button>
         
-        <button className="flex flex-col items-center cursor-pointer" onClick={handleLogout}>
+        <button 
+          className="flex flex-col items-center cursor-pointer" 
+          onClick={handleLogout} 
+          aria-label="Logout"
+        >
           <LogOut className="h-6 w-6" />
           <span className="text-xs mt-1">Logout</span>
         </button>

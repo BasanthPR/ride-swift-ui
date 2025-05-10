@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ const DeliverPage = () => {
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-4">
             <h2 className="text-3xl font-bold mb-4">Courier Service</h2>
             <p className="text-gray-600 mb-6">
-              Our courier service is currently unavailable in your area. We apologize for the inconvenience.
+              Our courier service is currently unavailable. We apologize for the inconvenience.
             </p>
             <p className="text-gray-600 mb-8">
               Please check back later as we continue to expand our services.

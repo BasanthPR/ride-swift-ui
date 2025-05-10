@@ -1,177 +1,109 @@
 
-import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { toast } from "@/components/ui/use-toast";
+import { useRef, useEffect, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
-type MapProps = {
+// Define props interface
+interface MapProps {
+  className?: string;
   pickupLocation?: [number, number];
   dropoffLocation?: [number, number];
-  driverLocation?: [number, number]; // Add driverLocation prop
-  className?: string;
-};
+  driverLocation?: [number, number];
+}
 
-const Map = ({ pickupLocation, dropoffLocation, driverLocation, className = '' }: MapProps) => {
+const Map = ({ className, pickupLocation, dropoffLocation, driverLocation }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [tokenError, setTokenError] = useState<string>('');
 
+  // Initialize the map
   useEffect(() => {
-    // For demo purposes, we would use an environment variable in production
-    // This is just a temporary state for user to input their token
-    if (!mapboxToken) return;
-    
-    // Validate token format - must start with "pk."
-    if (!mapboxToken.startsWith('pk.')) {
-      setTokenError('Please use a public access token (starts with pk.)');
-      toast({
-        title: "Invalid Mapbox Token",
-        description: "Please use a public access token that starts with 'pk.'",
-        variant: "destructive"
-      });
-      return;
-    } else {
-      setTokenError('');
-    }
-    
-    if (mapContainer.current && !map.current) {
-      try {
-        mapboxgl.accessToken = mapboxToken;
-        
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/dark-v11', // Uber-like dark style
-          center: [-74.006, 40.7128], // Default to NYC
-          zoom: 12,
-        });
+    if (!mapContainer.current) return;
 
-        map.current.on('load', () => {
-          setMapLoaded(true);
-        });
-      } catch (error) {
-        console.error('Mapbox initialization error:', error);
-        setTokenError(error instanceof Error ? error.message : 'Failed to initialize map');
-        toast({
-          title: "Map Error",
-          description: error instanceof Error ? error.message : 'Failed to initialize map',
-          variant: "destructive"
-        });
-      }
-    }
+    // Replace this with your actual Mapbox token
+    mapboxgl.accessToken = "pk.eyJ1IjoibG92YWJsZXRlc3QiLCJhIjoiY2xwcmU1cnVwMDE2MDJpcW82am9qc3MxZSJ9.ptj7HqFOxrYzmXlH4S8SBw";
+
+    const initialCoordinates: [number, number] = [-122.4194, 37.7749]; // San Francisco
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v11",
+      center: initialCoordinates,
+      zoom: 12,
+    });
+
+    map.current.on("load", () => {
+      setMapLoaded(true);
+    });
 
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
+      map.current?.remove();
     };
-  }, [mapboxToken]);
+  }, []);
 
-  // Add markers when locations change
+  // Update markers when locations change
   useEffect(() => {
-    if (!mapLoaded || !map.current) return;
-    
-    // Clear existing markers
-    const markers = document.querySelectorAll('.mapboxgl-marker');
-    markers.forEach(marker => marker.remove());
-    
+    if (!map.current || !mapLoaded) return;
+
+    // Remove existing markers
+    const markers = document.querySelectorAll(".mapboxgl-marker");
+    markers.forEach((marker) => marker.remove());
+
     // Add pickup marker
     if (pickupLocation) {
-      const el = document.createElement('div');
-      el.className = 'pickup-marker';
-      el.style.backgroundColor = '#276EF1'; // Uber blue
-      el.style.width = '15px';
-      el.style.height = '15px';
-      el.style.borderRadius = '50%';
-      el.style.border = '2px solid white';
-      
-      new mapboxgl.Marker(el)
+      const pickupEl = document.createElement("div");
+      pickupEl.className = "w-5 h-5 bg-primary rounded-full border-2 border-white";
+      new mapboxgl.Marker({ element: pickupEl })
         .setLngLat(pickupLocation)
         .addTo(map.current);
-        
-      map.current.flyTo({
-        center: pickupLocation,
-        zoom: 14,
-        essential: true
-      });
+
+      // Center on the pickup location
+      map.current.flyTo({ center: pickupLocation, zoom: 14 });
     }
-    
+
     // Add dropoff marker
     if (dropoffLocation) {
-      const el = document.createElement('div');
-      el.className = 'dropoff-marker';
-      el.style.backgroundColor = '#05A357'; // Uber green
-      el.style.width = '15px';
-      el.style.height = '15px';
-      el.style.borderRadius = '50%';
-      el.style.border = '2px solid white';
-      
-      new mapboxgl.Marker(el)
+      const dropoffEl = document.createElement("div");
+      dropoffEl.className = "w-5 h-5 bg-uber-green rounded-full border-2 border-white";
+      new mapboxgl.Marker({ element: dropoffEl })
         .setLngLat(dropoffLocation)
         .addTo(map.current);
+
+      // If we have both pickup and dropoff, fit the map to show both
+      if (pickupLocation) {
+        const bounds = new mapboxgl.LngLatBounds()
+          .extend(pickupLocation)
+          .extend(dropoffLocation);
+
+        map.current.fitBounds(bounds, { padding: 80 });
+      } else {
+        map.current.flyTo({ center: dropoffLocation, zoom: 14 });
+      }
     }
-    
-    // Add driver marker if available
+
+    // Add driver marker
     if (driverLocation) {
-      const el = document.createElement('div');
-      el.className = 'driver-marker';
-      el.style.backgroundColor = '#FFD300'; // Yellow for driver
-      el.style.width = '18px';
-      el.style.height = '18px';
-      el.style.borderRadius = '50%';
-      el.style.border = '2px solid white';
+      const driverEl = document.createElement("div");
+      driverEl.className = "w-6 h-6 bg-black rounded-full border-2 border-white flex items-center justify-center";
       
-      new mapboxgl.Marker(el)
+      // Create car icon
+      const carIcon = document.createElement("div");
+      carIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2V5H3v12h2"/><path d="M14 17H9"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><path d="M6 15V5h12v10"/></svg>`;
+      driverEl.appendChild(carIcon);
+      
+      new mapboxgl.Marker({ element: driverEl })
         .setLngLat(driverLocation)
         .addTo(map.current);
+
+      // Center on the driver location if no other points
+      if (!pickupLocation && !dropoffLocation) {
+        map.current.flyTo({ center: driverLocation, zoom: 14 });
+      }
     }
-    
-    // If both locations are set, fit bounds to include both
-    if ((pickupLocation && dropoffLocation) || (pickupLocation && driverLocation) || (dropoffLocation && driverLocation)) {
-      const bounds = new mapboxgl.LngLatBounds();
-      
-      if (pickupLocation) bounds.extend(pickupLocation);
-      if (dropoffLocation) bounds.extend(dropoffLocation);
-      if (driverLocation) bounds.extend(driverLocation);
-      
-      map.current.fitBounds(bounds, {
-        padding: 100,
-        maxZoom: 15
-      });
-    }
+
   }, [pickupLocation, dropoffLocation, driverLocation, mapLoaded]);
 
-  return (
-    <div className={`relative ${className}`}>
-      {!mapboxToken && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-10 p-4">
-          <p className="mb-4 text-center">Please enter your Mapbox public token to use the map</p>
-          <input 
-            type="text" 
-            className="w-full max-w-sm mb-2 p-2 border border-gray-300 rounded" 
-            placeholder="Enter your Mapbox public token (starts with pk.)"
-            onChange={(e) => setMapboxToken(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground text-center">
-            You can get a token at <a href="https://mapbox.com" className="text-primary underline" target="_blank" rel="noopener noreferrer">mapbox.com</a>
-          </p>
-          {tokenError && (
-            <p className="text-red-500 mt-2 text-sm">{tokenError}</p>
-          )}
-        </div>
-      )}
-      <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden" />
-      {/* Overlay with Uber logo when map is loading or not available */}
-      {(!mapboxToken || !mapLoaded) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm z-0">
-          <div className="text-4xl font-bold mb-4">Uber</div>
-          <div className="text-muted-foreground">Map loading...</div>
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={mapContainer} className={className} />;
 };
 
 export default Map;

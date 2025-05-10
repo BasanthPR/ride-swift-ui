@@ -28,14 +28,8 @@ const HomePage = () => {
     }
   };
 
-  // Suggestions with Courier disabled
+  // Suggestion with only Hourly option (removed Courier)
   const suggestions = [
-    {
-      id: "courier",
-      title: "Courier Service",
-      description: "Service not available at this time.",
-      disabled: true
-    },
     {
       id: "hourly",
       title: "Hourly",
@@ -138,31 +132,29 @@ const HomePage = () => {
           </div>
         </section>
         
-        {/* Suggestions Section - With Courier disabled */}
-        <section className="py-12 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8">Suggestions</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {suggestions.map((suggestion) => (
-              <div 
-                key={suggestion.id} 
-                className={`bg-gray-100 p-6 rounded-lg ${suggestion.disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                <h3 className="text-xl font-bold mb-2">{suggestion.title}</h3>
-                <p className="text-gray-700 mb-6">{suggestion.description}</p>
-                <div className="flex justify-between items-end">
-                  {suggestion.disabled ? (
-                    <span className="text-gray-500 font-medium">Not available</span>
-                  ) : (
+        {/* Suggestions Section - Only Hourly (removed Courier) */}
+        {suggestions.length > 0 && (
+          <section className="py-12 px-4 md:px-8 lg:px-16 max-w-7xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8">Suggestions</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+              {suggestions.map((suggestion) => (
+                <div 
+                  key={suggestion.id} 
+                  className="bg-gray-100 p-6 rounded-lg"
+                >
+                  <h3 className="text-xl font-bold mb-2">{suggestion.title}</h3>
+                  <p className="text-gray-700 mb-6">{suggestion.description}</p>
+                  <div className="flex justify-between items-end">
                     <Link to={suggestion.link} className="text-black font-medium hover:underline">
                       Details
                     </Link>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
